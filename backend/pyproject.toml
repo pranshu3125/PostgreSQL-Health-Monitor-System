@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "metrics-backend"
+version = "1.0.0"
+description = "PostgreSQL Metrics Dashboard Backend"
+authors = ["Company"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.25"}
+asyncpg = "^0.29.0"
+alembic = "^1.13.1"
+pydantic = "^2.5.3"
+pydantic-settings = "^2.1.0"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = "[bcrypt]", version = "^1.7.4"
+python-multipart = "^0.0.6"
+httpx = "^0.26.0"
+psycopg2-binary = "^2.9.9"

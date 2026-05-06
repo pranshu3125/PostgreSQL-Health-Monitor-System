@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+# Postgres Database Service
+  postgres:
+    image: postgres:10.18
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_pass
+    ports:
+      - 5432:5432
+# Prometheus Monitoring Service
+  prometheus:
+    image: prom/prometheus:v2.28.1
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - /Users/hemant/Desktop/hpe-repos/ops-prometheus-exporter/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+# Prometheus Pushgateway Service
+  pushgateway:
+    image: prom/pushgateway:v1.4.2
+    ports:
+      - "9091:9091"
+# Custom Postgres Metrics Exporter Service
+  ops-prometheus-exporter:
+      image: ops-prometheus-postgres-exporter:latest
+      tty: true
+      depends_on:
+        - postgres
+        - pushgateway
+        - prometheus
+      environment:
+        - PROMETHEUS_PUSHGATEWAY=pushgateway:9091
+        - POSTGRES_HOST=postgres
+        - POSTGRES_DB=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres_pass
+        - POSTGRES_PORT=5432
+        - ENVIRONMENT=local

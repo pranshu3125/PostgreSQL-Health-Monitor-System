@@ -1,0 +1,70 @@
+# Copyright 2024 Hewlett Packard Enterprise Development LP
+{{- range .Values.workspace }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .namespace }}-postgres-metrics-exporter
+  namespace: cdsops-nomesh
+  labels:
+    {{- include "sc-ops-postgres-metrics-exporter.labels" $ | nindent 4 }}
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "*/5 * * * *"
+  startingDeadlineSeconds: 180
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 240
+      template:
+        metadata:
+          {{- with $.Values.job.annotations }}
+          annotations:
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
+          name: postgres-metrics-exporter
+        spec:
+          containers:
+            - args:
+                - /bin/sh
+                - '-c'
+                - source /vault/secrets/database-config && python /app/postgres_metrics_exporter.py
+              image:  "{{ $.Values.image.repository }}:{{ $.Chart.Version }}"
+              imagePullPolicy: {{ $.Values.image.pullPolicy }}
+              name: postgres-metrics-exporter
+              securityContext:
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                runAsUser: 10001
+                runAsGroup: 30000
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              env:
+                - name: PROMETHEUS_PUSHGATEWAY
+                  value: "prometheus-pushgateway.{{ .namespace }}.svc.cluster.local:{{ .gatewayPort }}"
+                - name: POSTGRES_HOST
+                  valueFrom:
+                    configMapKeyRef:
+                      name: "sc-ops-service-discovery"
+                      key: "postgresEndpoint"
+                - name: POSTGRES_READ_HOST
+                  valueFrom:
+                    configMapKeyRef:
+                      name: "sc-ops-service-discovery"
+                      key: "readonlyPostgresEndpoint"
+                - name: POSTGRES_PORT
+                  value: "{{ $.Values.postgres_port }}"
+                - name: POSTGRES_DB
+                  value: "{{ $.Values.postgres_db }}"
+                - name: POSTGRES_SSL_MODE
+                  value: "{{ $.Values.postgres_ssl_mode }}"
+              resources:
+                {{- toYaml $.Values.resources | nindent 16 }}
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          serviceAccountName: {{ $.Values.serviceAccount.name }}
+      ttlSecondsAfterFinished: 100     
+{{- end }}
