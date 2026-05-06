@@ -1,6 +1,6 @@
 # PostgreSQL Metrics Exporter
 ## 🚀 Live Demo
-👉 https://your-app-name.streamlit.app
+👉https://appql-and-python-euxnjfngzqtzgajlpry6cc.streamlit.app/
 
 This is a PostgreSQL Health Monitoring Dashboard built using Python and Streamlit.
 
